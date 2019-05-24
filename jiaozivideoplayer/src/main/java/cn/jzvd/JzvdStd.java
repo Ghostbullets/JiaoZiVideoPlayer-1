@@ -39,32 +39,32 @@ public class JzvdStd extends Jzvd {
     public static int LAST_GET_BATTERYLEVEL_PERCENT = 70;
     protected static Timer DISMISS_CONTROL_VIEW_TIMER;
 
-    public ImageView backButton;
-    public ProgressBar bottomProgressBar, loadingProgressBar;
-    public TextView titleTextView;
-    public ImageView thumbImageView;
-    public ImageView tinyBackImageView;
-    public LinearLayout batteryTimeLayout;
-    public ImageView batteryLevel;
-    public TextView videoCurrentTime;
-    public TextView replayTextView;
-    public TextView clarity;
-    public PopupWindow clarityPopWindow;
-    public TextView mRetryBtn;
-    public LinearLayout mRetryLayout;
-    protected DismissControlViewTimerTask mDismissControlViewTimerTask;
-    protected Dialog mProgressDialog;
-    protected ProgressBar mDialogProgressBar;
-    protected TextView mDialogSeekTime;
-    protected TextView mDialogTotalTime;
-    protected ImageView mDialogIcon;
-    protected Dialog mVolumeDialog;
-    protected ProgressBar mDialogVolumeProgressBar;
-    protected TextView mDialogVolumeTextView;
-    protected ImageView mDialogVolumeImageView;
-    protected Dialog mBrightnessDialog;
-    protected ProgressBar mDialogBrightnessProgressBar;
-    protected TextView mDialogBrightnessTextView;
+    public ImageView backButton;//返回
+    public ProgressBar bottomProgressBar, loadingProgressBar;//底部弹窗，加载中进弹窗
+    public TextView titleTextView;//视频标题
+    public ImageView thumbImageView;//缩略图
+    public ImageView tinyBackImageView;//小窗口的返回键
+    public LinearLayout batteryTimeLayout;//电池时间布局
+    public ImageView batteryLevel;//电池电量图标，例如满电、快要没点
+    public TextView videoCurrentTime;//视频当前时间
+    public TextView replayTextView;//重播
+    public TextView clarity;//切换清晰度
+    public PopupWindow clarityPopWindow;//切换清晰度弹窗
+    public TextView mRetryBtn;//重试按钮
+    public LinearLayout mRetryLayout;//重试布局
+    protected DismissControlViewTimerTask mDismissControlViewTimerTask;//隐藏控制布局任务任务
+    protected Dialog mProgressDialog;//拖拽进度条时显示的弹窗
+    protected ProgressBar mDialogProgressBar;//进度弹窗控件
+    protected TextView mDialogSeekTime;//显示当前进度文本
+    protected TextView mDialogTotalTime;//显示总时间进度文本
+    protected ImageView mDialogIcon;//进度图标
+    protected Dialog mVolumeDialog;//修改音量大小时显示的弹窗
+    protected ProgressBar mDialogVolumeProgressBar;//音量改变弹窗控件
+    protected TextView mDialogVolumeTextView;//音量改变文本
+    protected ImageView mDialogVolumeImageView;//音量改变图标
+    protected Dialog mBrightnessDialog;//修改屏幕亮度时显示的弹窗
+    protected ProgressBar mDialogBrightnessProgressBar;//屏幕亮度改变弹窗控件
+    protected TextView mDialogBrightnessTextView;//屏幕亮度改变文本
 
 
     public JzvdStd(Context context) {
@@ -105,6 +105,10 @@ public class JzvdStd extends Jzvd {
         setScreen(screen);
     }
 
+    /**
+     * 更改启动按钮大小，在全屏、普通状态切换时
+     * @param size
+     */
     public void changeStartButtonSize(int size) {
         ViewGroup.LayoutParams lp = startButton.getLayoutParams();
         lp.height = size;
@@ -198,10 +202,10 @@ public class JzvdStd extends Jzvd {
             }
         } else if (id == R.id.bottom_seek_progress) {
             switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_DOWN://按住底部进度条时，取消隐藏控制控件任务
                     cancelDismissControlViewTimer();
                     break;
-                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_UP://松开底部进度条时，执行隐藏控制控件任务
                     startDismissControlViewTimer();
                     break;
             }
@@ -213,29 +217,30 @@ public class JzvdStd extends Jzvd {
     public void onClick(View v) {
         super.onClick(v);
         int i = v.getId();
-        if (i == R.id.thumb) {
+        if (i == R.id.thumb) {//点击缩略图
             if (jzDataSource == null || jzDataSource.urlsMap.isEmpty() || jzDataSource.getCurrentUrl() == null) {
                 Toast.makeText(getContext(), getResources().getString(R.string.no_url), Toast.LENGTH_SHORT).show();
                 return;
             }
-            if (state == STATE_NORMAL) {
+            if (state == STATE_NORMAL) {//当前播放状态为空闲状态
                 if (!jzDataSource.getCurrentUrl().toString().startsWith("file") &&
                         !jzDataSource.getCurrentUrl().toString().startsWith("/") &&
                         !JZUtils.isWifiConnected(getContext()) && !WIFI_TIP_DIALOG_SHOWED) {
+                    //不是本地视频、wifi未连接、未授权流量看视频，显示请使用wifi播放弹窗
                     showWifiDialog();
                     return;
                 }
                 startVideo();
-            } else if (state == STATE_AUTO_COMPLETE) {
+            } else if (state == STATE_AUTO_COMPLETE) {//当前播放状态为播放完毕状态
                 onClickUiToggle();
             }
-        } else if (i == R.id.surface_container) {
+        } else if (i == R.id.surface_container) {//点击视频，2.5秒后隐藏图标
             startDismissControlViewTimer();
-        } else if (i == R.id.back) {
+        } else if (i == R.id.back) {//返回
             backPress();
-        } else if (i == R.id.back_tiny) {
+        } else if (i == R.id.back_tiny) {//关闭小窗播放
             clearFloatScreen();
-        } else if (i == R.id.clarity) {
+        } else if (i == R.id.clarity) {//切换清晰度
             LayoutInflater inflater = (LayoutInflater) getContext()
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             final LinearLayout layout = (LinearLayout) inflater.inflate(R.layout.jz_layout_clarity, null);
@@ -243,7 +248,7 @@ public class JzvdStd extends Jzvd {
             OnClickListener mQualityListener = v1 -> {
                 int index = (int) v1.getTag();
                 changeUrl(index, getCurrentPositionWhenPlaying());
-                clarity.setText(jzDataSource.getCurrentKey().toString());
+                clarity.setText(jzDataSource.getCurrentKey().toString());//设置切换后的清晰度提示文本
                 for (int j = 0; j < layout.getChildCount(); j++) {//设置点击之后的颜色
                     if (j == jzDataSource.currentUrlIndex) {
                         ((TextView) layout.getChildAt(j)).setTextColor(Color.parseColor("#fff85959"));
@@ -275,7 +280,7 @@ public class JzvdStd extends Jzvd {
             int offsetX = clarity.getMeasuredWidth() / 3;
             int offsetY = clarity.getMeasuredHeight() / 3;
             clarityPopWindow.update(clarity, -offsetX, -offsetY, Math.round(layout.getMeasuredWidth() * 2), layout.getMeasuredHeight());
-        } else if (i == R.id.retry_btn) {
+        } else if (i == R.id.retry_btn) {//重新尝试播放
             if (jzDataSource.urlsMap.isEmpty() || jzDataSource.getCurrentUrl() == null) {
                 Toast.makeText(getContext(), getResources().getString(R.string.no_url), Toast.LENGTH_SHORT).show();
                 return;
@@ -283,6 +288,7 @@ public class JzvdStd extends Jzvd {
             if (!jzDataSource.getCurrentUrl().toString().startsWith("file") && !
                     jzDataSource.getCurrentUrl().toString().startsWith("/") &&
                     !JZUtils.isWifiConnected(getContext()) && !WIFI_TIP_DIALOG_SHOWED) {
+                //不是本地视频、wifi未连接、未授权流量看视频，显示请使用wifi播放弹窗
                 showWifiDialog();
                 return;
             }
@@ -324,7 +330,7 @@ public class JzvdStd extends Jzvd {
     public void setScreenTiny() {
         super.setScreenTiny();
         tinyBackImageView.setVisibility(View.VISIBLE);
-        setAllControlsVisiblity(View.INVISIBLE, View.INVISIBLE, View.INVISIBLE,
+        setAllControlsVisibility(View.INVISIBLE, View.INVISIBLE, View.INVISIBLE,
                 View.INVISIBLE, View.INVISIBLE, View.INVISIBLE, View.INVISIBLE);
         batteryTimeLayout.setVisibility(View.GONE);
         clarity.setVisibility(View.GONE);
@@ -360,6 +366,9 @@ public class JzvdStd extends Jzvd {
         startDismissControlViewTimer();
     }
 
+    /**
+     * 界面切换
+     */
     public void onClickUiToggle() {//这是事件
         if (bottomContainer.getVisibility() != View.VISIBLE) {
             setSystemTimeAndBattery();
@@ -386,14 +395,18 @@ public class JzvdStd extends Jzvd {
         }
     }
 
+    /**
+     * 设置显示系统时间和电池
+     */
     public void setSystemTimeAndBattery() {
         SimpleDateFormat dateFormater = new SimpleDateFormat("HH:mm");
         Date date = new Date();
         videoCurrentTime.setText(dateFormater.format(date));
+        //超过30秒则重新发起广播获取电量
         if ((System.currentTimeMillis() - LAST_GET_BATTERYLEVEL_TIME) > 30000) {
             LAST_GET_BATTERYLEVEL_TIME = System.currentTimeMillis();
             getContext().registerReceiver(
-                    battertReceiver,
+                    batteryReceiver,
                     new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
             );
         } else {
@@ -401,6 +414,9 @@ public class JzvdStd extends Jzvd {
         }
     }
 
+    /**
+     * 设置电量图标
+     */
     public void setBatteryLevel() {
         int percent = LAST_GET_BATTERYLEVEL_PERCENT;
         if (percent < 15) {
@@ -462,15 +478,18 @@ public class JzvdStd extends Jzvd {
         bottomProgressBar.setSecondaryProgress(0);
     }
 
+    /**
+     * 切换UI为空闲状态
+     */
     public void changeUiToNormal() {
         switch (screen) {
             case SCREEN_NORMAL:
-                setAllControlsVisiblity(View.VISIBLE, View.INVISIBLE, View.VISIBLE,
+                setAllControlsVisibility(View.VISIBLE, View.INVISIBLE, View.VISIBLE,
                         View.INVISIBLE, View.VISIBLE, View.INVISIBLE, View.INVISIBLE);
                 updateStartImage();
                 break;
             case SCREEN_FULLSCREEN:
-                setAllControlsVisiblity(View.VISIBLE, View.INVISIBLE, View.VISIBLE,
+                setAllControlsVisibility(View.VISIBLE, View.INVISIBLE, View.VISIBLE,
                         View.INVISIBLE, View.VISIBLE, View.INVISIBLE, View.INVISIBLE);
                 updateStartImage();
                 break;
@@ -479,11 +498,14 @@ public class JzvdStd extends Jzvd {
         }
     }
 
+    /**
+     * 切换UI为准备中状态
+     */
     public void changeUiToPreparing() {
         switch (screen) {
             case SCREEN_NORMAL:
             case SCREEN_FULLSCREEN:
-                setAllControlsVisiblity(View.INVISIBLE, View.INVISIBLE, View.INVISIBLE,
+                setAllControlsVisibility(View.INVISIBLE, View.INVISIBLE, View.INVISIBLE,
                         View.VISIBLE, View.VISIBLE, View.INVISIBLE, View.INVISIBLE);
                 updateStartImage();
                 break;
@@ -493,15 +515,18 @@ public class JzvdStd extends Jzvd {
 
     }
 
+    /**
+     * 显示UI，当处于播放中状态时
+     */
     public void changeUiToPlayingShow() {
         switch (screen) {
             case SCREEN_NORMAL:
-                setAllControlsVisiblity(View.VISIBLE, View.VISIBLE, View.VISIBLE,
+                setAllControlsVisibility(View.VISIBLE, View.VISIBLE, View.VISIBLE,
                         View.INVISIBLE, View.INVISIBLE, View.INVISIBLE, View.INVISIBLE);
                 updateStartImage();
                 break;
             case SCREEN_FULLSCREEN:
-                setAllControlsVisiblity(View.VISIBLE, View.VISIBLE, View.VISIBLE,
+                setAllControlsVisibility(View.VISIBLE, View.VISIBLE, View.VISIBLE,
                         View.INVISIBLE, View.INVISIBLE, View.INVISIBLE, View.INVISIBLE);
                 updateStartImage();
                 break;
@@ -511,14 +536,17 @@ public class JzvdStd extends Jzvd {
 
     }
 
+    /**
+     * 隐藏UI，当处于播放中状态时
+     */
     public void changeUiToPlayingClear() {
         switch (screen) {
             case SCREEN_NORMAL:
-                setAllControlsVisiblity(View.INVISIBLE, View.INVISIBLE, View.INVISIBLE,
+                setAllControlsVisibility(View.INVISIBLE, View.INVISIBLE, View.INVISIBLE,
                         View.INVISIBLE, View.INVISIBLE, View.VISIBLE, View.INVISIBLE);
                 break;
             case SCREEN_FULLSCREEN:
-                setAllControlsVisiblity(View.INVISIBLE, View.INVISIBLE, View.INVISIBLE,
+                setAllControlsVisibility(View.INVISIBLE, View.INVISIBLE, View.INVISIBLE,
                         View.INVISIBLE, View.INVISIBLE, View.VISIBLE, View.INVISIBLE);
                 break;
             case SCREEN_TINY:
@@ -527,15 +555,18 @@ public class JzvdStd extends Jzvd {
 
     }
 
+    /**
+     * 显示UI，当处于暂停状态时
+     */
     public void changeUiToPauseShow() {
         switch (screen) {
             case SCREEN_NORMAL:
-                setAllControlsVisiblity(View.VISIBLE, View.VISIBLE, View.VISIBLE,
+                setAllControlsVisibility(View.VISIBLE, View.VISIBLE, View.VISIBLE,
                         View.INVISIBLE, View.INVISIBLE, View.INVISIBLE, View.INVISIBLE);
                 updateStartImage();
                 break;
             case SCREEN_FULLSCREEN:
-                setAllControlsVisiblity(View.VISIBLE, View.VISIBLE, View.VISIBLE,
+                setAllControlsVisibility(View.VISIBLE, View.VISIBLE, View.VISIBLE,
                         View.INVISIBLE, View.INVISIBLE, View.INVISIBLE, View.INVISIBLE);
                 updateStartImage();
                 break;
@@ -544,14 +575,17 @@ public class JzvdStd extends Jzvd {
         }
     }
 
+    /**
+     * 隐藏UI，当处于暂停状态时
+     */
     public void changeUiToPauseClear() {
         switch (screen) {
             case SCREEN_NORMAL:
-                setAllControlsVisiblity(View.INVISIBLE, View.INVISIBLE, View.INVISIBLE,
+                setAllControlsVisibility(View.INVISIBLE, View.INVISIBLE, View.INVISIBLE,
                         View.INVISIBLE, View.INVISIBLE, View.VISIBLE, View.INVISIBLE);
                 break;
             case SCREEN_FULLSCREEN:
-                setAllControlsVisiblity(View.INVISIBLE, View.INVISIBLE, View.INVISIBLE,
+                setAllControlsVisibility(View.INVISIBLE, View.INVISIBLE, View.INVISIBLE,
                         View.INVISIBLE, View.INVISIBLE, View.VISIBLE, View.INVISIBLE);
                 break;
             case SCREEN_TINY:
@@ -560,15 +594,18 @@ public class JzvdStd extends Jzvd {
 
     }
 
+    /**
+     * 切换UI为播放完毕状态
+     */
     public void changeUiToComplete() {
         switch (screen) {
             case SCREEN_NORMAL:
-                setAllControlsVisiblity(View.VISIBLE, View.INVISIBLE, View.VISIBLE,
+                setAllControlsVisibility(View.VISIBLE, View.INVISIBLE, View.VISIBLE,
                         View.INVISIBLE, View.VISIBLE, View.INVISIBLE, View.INVISIBLE);
                 updateStartImage();
                 break;
             case SCREEN_FULLSCREEN:
-                setAllControlsVisiblity(View.VISIBLE, View.INVISIBLE, View.VISIBLE,
+                setAllControlsVisibility(View.VISIBLE, View.INVISIBLE, View.VISIBLE,
                         View.INVISIBLE, View.VISIBLE, View.INVISIBLE, View.INVISIBLE);
                 updateStartImage();
                 break;
@@ -578,15 +615,18 @@ public class JzvdStd extends Jzvd {
 
     }
 
+    /**
+     * 切换UI为播放失败状态
+     */
     public void changeUiToError() {
         switch (screen) {
             case SCREEN_NORMAL:
-                setAllControlsVisiblity(View.INVISIBLE, View.INVISIBLE, View.VISIBLE,
+                setAllControlsVisibility(View.INVISIBLE, View.INVISIBLE, View.VISIBLE,
                         View.INVISIBLE, View.INVISIBLE, View.INVISIBLE, View.VISIBLE);
                 updateStartImage();
                 break;
             case SCREEN_FULLSCREEN:
-                setAllControlsVisiblity(View.VISIBLE, View.INVISIBLE, View.VISIBLE,
+                setAllControlsVisibility(View.VISIBLE, View.INVISIBLE, View.VISIBLE,
                         View.INVISIBLE, View.INVISIBLE, View.INVISIBLE, View.VISIBLE);
                 updateStartImage();
                 break;
@@ -596,8 +636,18 @@ public class JzvdStd extends Jzvd {
 
     }
 
-    public void setAllControlsVisiblity(int topCon, int bottomCon, int startBtn, int loadingPro,
-                                        int thumbImg, int bottomPro, int retryLayout) {
+    /**
+     * 设置全部的控制按钮的显示隐藏
+     * @param topCon 顶部容器
+     * @param bottomCon 底部容器
+     * @param startBtn 开始、暂停按钮
+     * @param loadingPro 加载中弹窗
+     * @param thumbImg 缩略图
+     * @param bottomPro  底部弹窗
+     * @param retryLayout 重新尝试播放布局
+     */
+    public void setAllControlsVisibility(int topCon, int bottomCon, int startBtn, int loadingPro,
+                                         int thumbImg, int bottomPro, int retryLayout) {
         topContainer.setVisibility(topCon);
         bottomContainer.setVisibility(bottomCon);
         startButton.setVisibility(startBtn);
@@ -607,6 +657,9 @@ public class JzvdStd extends Jzvd {
         mRetryLayout.setVisibility(retryLayout);
     }
 
+    /**
+     * 更新开始、暂停、重试按钮图标状态
+     */
     public void updateStartImage() {
         if (state == STATE_PLAYING) {
             startButton.setVisibility(VISIBLE);
@@ -725,6 +778,11 @@ public class JzvdStd extends Jzvd {
         }
     }
 
+    /**
+     * 根据布局创建弹窗
+     * @param localView 布局
+     * @return
+     */
     public Dialog createDialogWithView(View localView) {
         Dialog dialog = new Dialog(getContext(), R.style.jz_style_dialog_progress);
         dialog.setContentView(localView);
@@ -739,6 +797,9 @@ public class JzvdStd extends Jzvd {
         return dialog;
     }
 
+    /**
+     * 延迟2.5秒执行隐藏控制控件任务
+     */
     public void startDismissControlViewTimer() {
         cancelDismissControlViewTimer();
         DISMISS_CONTROL_VIEW_TIMER = new Timer();
@@ -746,6 +807,9 @@ public class JzvdStd extends Jzvd {
         DISMISS_CONTROL_VIEW_TIMER.schedule(mDismissControlViewTimerTask, 2500);
     }
 
+    /**
+     * 取消执行隐藏控制控件任务
+     */
     public void cancelDismissControlViewTimer() {
         if (DISMISS_CONTROL_VIEW_TIMER != null) {
             DISMISS_CONTROL_VIEW_TIMER.cancel();
@@ -771,7 +835,10 @@ public class JzvdStd extends Jzvd {
         }
     }
 
-    public void dissmissControlView() {
+    /**
+     * 隐藏控制布局，比如顶部、底部控件、开始按钮等
+     */
+    public void dismissControlView() {
         if (state != STATE_NORMAL
                 && state != STATE_ERROR
                 && state != STATE_AUTO_COMPLETE) {
@@ -793,21 +860,28 @@ public class JzvdStd extends Jzvd {
 
         @Override
         public void run() {
-            dissmissControlView();
+            dismissControlView();
         }
     }
 
-    private BroadcastReceiver battertReceiver = new BroadcastReceiver() {
+    /**
+     * 用于接收电池电量变化广播
+     */
+    private BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+            //电池电量变化监听
             if (Intent.ACTION_BATTERY_CHANGED.equals(action)) {
+                //当前剩余电量
                 int level = intent.getIntExtra("level", 0);
+                //总电量
                 int scale = intent.getIntExtra("scale", 100);
+                //当前剩余电量百分比
                 int percent = level * 100 / scale;
                 LAST_GET_BATTERYLEVEL_PERCENT = percent;
                 setBatteryLevel();
                 try {
-                    getContext().unregisterReceiver(battertReceiver);
+                    getContext().unregisterReceiver(batteryReceiver);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

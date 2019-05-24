@@ -27,6 +27,11 @@ public class JZUtils {
     public static final String TAG = "JZVD";
     public static int SYSTEM_UI = 0;
 
+    /**
+     * 将时间戳转换为时间字符串
+     * @param timeMs 毫秒为单位的时间
+     * @return
+     */
     public static String stringForTime(long timeMs) {
         if (timeMs <= 0 || timeMs >= 24 * 60 * 60 * 1000) {
             return "00:00";
@@ -113,6 +118,12 @@ public class JZUtils {
         return (int) (dpValue * scale + 0.5f);
     }
 
+    /**
+     * 保存播放进度
+     * @param context 上下文
+     * @param url 视频url
+     * @param progress 进度
+     */
     public static void saveProgress(Context context, Object url, long progress) {
         if (!Jzvd.SAVE_PROGRESS) return;
         Log.i(TAG, "saveProgress: " + progress);
@@ -125,6 +136,12 @@ public class JZUtils {
         editor.putLong("newVersion:" + url.toString(), progress).apply();
     }
 
+    /**
+     * 根据视频url获取播放进度
+     * @param context 上下文
+     * @param url 视频url
+     * @return
+     */
     public static long getSavedProgress(Context context, Object url) {
         if (!Jzvd.SAVE_PROGRESS) return 0;
         SharedPreferences spn = context.getSharedPreferences("JZVD_PROGRESS",
@@ -133,7 +150,7 @@ public class JZUtils {
     }
 
     /**
-     * if url == null, clear all progress
+     * if url == null, clear all progress 清空全部视频播放进度或者指定url的进度
      *
      * @param context context
      * @param url     if url!=null clear this url progress
@@ -150,6 +167,10 @@ public class JZUtils {
         }
     }
 
+    /**
+     * 取消全屏
+     * @param context
+     */
     @SuppressLint("RestrictedApi")
     public static void showStatusBar(Context context) {
         if (Jzvd.TOOL_BAR_EXIST) {
@@ -157,7 +178,10 @@ public class JZUtils {
         }
     }
 
-    //如果是沉浸式的，全屏前就没有状态栏
+    /**
+     * 全屏 如果是沉浸式的，全屏前就没有状态栏
+     * @param context
+     */
     @SuppressLint("RestrictedApi")
     public static void hideStatusBar(Context context) {
         if (Jzvd.TOOL_BAR_EXIST) {
@@ -165,6 +189,10 @@ public class JZUtils {
         }
     }
 
+    /**
+     * 隐藏导航栏、设置全屏模式
+     * @param context
+     */
     @SuppressLint("NewApi")
     public static void hideSystemUI(Context context) {
         int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -180,6 +208,10 @@ public class JZUtils {
 
     }
 
+    /**
+     * 显示系统UI
+     * @param context
+     */
     @SuppressLint("NewApi")
     public static void showSystemUI(Context context) {
         int uiOptions = View.SYSTEM_UI_FLAG_VISIBLE;
