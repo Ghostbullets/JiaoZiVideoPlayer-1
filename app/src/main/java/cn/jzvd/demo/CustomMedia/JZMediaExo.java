@@ -42,6 +42,7 @@ import cn.jzvd.demo.R;
 
 /**
  * Created by MinhDV on 5/3/18.
+ * Exo播放引擎
  */
 public class JZMediaExo extends JZMediaInterface implements Player.EventListener, VideoListener {
     private SimpleExoPlayer simpleExoPlayer;
@@ -54,20 +55,17 @@ public class JZMediaExo extends JZMediaInterface implements Player.EventListener
     }
 
     @Override
-    public void start() {
-        simpleExoPlayer.setPlayWhenReady(true);
-    }
-
-    @Override
     public void prepare() {
         Log.e(TAG, "prepare");
         Context context = jzvd.getContext();
 
+        //释放旧视频资源
         release();
         mMediaHandlerThread = new HandlerThread("JZVD");
         mMediaHandlerThread.start();
         mMediaHandler = new Handler(mMediaHandlerThread.getLooper());//主线程还是非主线程，就在这里
         handler = new Handler();
+
         mMediaHandler.post(() -> {
             BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
             TrackSelection.Factory videoTrackSelectionFactory =
@@ -102,13 +100,11 @@ public class JZMediaExo extends JZMediaInterface implements Player.EventListener
             Log.e(TAG, "URL Link = " + currUrl);
 
             simpleExoPlayer.addListener(this);
-            Boolean isLoop = jzvd.jzDataSource.looping;
-            if (isLoop) {
-                simpleExoPlayer.setRepeatMode(Player.REPEAT_MODE_ONE);
-            } else {
-                simpleExoPlayer.setRepeatMode(Player.REPEAT_MODE_OFF);
-            }
+            //是否循环播放视频
+            simpleExoPlayer.setRepeatMode(jzvd.jzDataSource.looping ? Player.REPEAT_MODE_ONE : Player.REPEAT_MODE_OFF);
+            //准备播放
             simpleExoPlayer.prepare(videoSource);
+            //视频准备好了就播放？true播放，false则暂停等待
             simpleExoPlayer.setPlayWhenReady(true);
             callback = new onBufferingUpdate();
 
@@ -118,13 +114,8 @@ public class JZMediaExo extends JZMediaInterface implements Player.EventListener
     }
 
     @Override
-    public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
-        handler.post(() -> jzvd.onVideoSizeChanged(width, height));
-    }
-
-    @Override
-    public void onRenderedFirstFrame() {
-        Log.e(TAG, "onRenderedFirstFrame");
+    public void start() {
+        simpleExoPlayer.setPlayWhenReady(true);
     }
 
     @Override
@@ -211,21 +202,21 @@ public class JZMediaExo extends JZMediaInterface implements Player.EventListener
         Log.e(TAG, "onPlayerStateChanged" + playbackState + "/ready=" + String.valueOf(playWhenReady));
         handler.post(() -> {
             switch (playbackState) {
-                case Player.STATE_IDLE: {
+                case Player.STATE_IDLE: {//空闲状态
                 }
                 break;
-                case Player.STATE_BUFFERING: {
+                case Player.STATE_BUFFERING: {//视频缓冲中
                     handler.post(callback);
                 }
                 break;
-                case Player.STATE_READY: {
+                case Player.STATE_READY: {//准备播放
                     if (playWhenReady) {
                         jzvd.onPrepared();
                     } else {
                     }
                 }
                 break;
-                case Player.STATE_ENDED: {
+                case Player.STATE_ENDED: {//播放完毕
                     jzvd.onAutoCompletion();
                 }
                 break;
@@ -264,6 +255,17 @@ public class JZMediaExo extends JZMediaInterface implements Player.EventListener
         handler.post(() -> jzvd.onSeekComplete());
     }
 
+
+    @Override
+    public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
+        handler.post(() -> jzvd.onVideoSizeChanged(width, height));
+    }
+
+    @Override
+    public void onRenderedFirstFrame() {
+        Log.e(TAG, "onRenderedFirstFrame");
+    }
+
     @Override
     public void setSurface(Surface surface) {
         simpleExoPlayer.setVideoSurface(surface);
@@ -294,6 +296,9 @@ public class JZMediaExo extends JZMediaInterface implements Player.EventListener
 
     }
 
+    /**
+     * 缓冲进度任务
+     */
     private class onBufferingUpdate implements Runnable {
         @Override
         public void run() {

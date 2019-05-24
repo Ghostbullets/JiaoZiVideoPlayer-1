@@ -18,7 +18,6 @@ import cn.jzvd.Jzvd;
 import cn.jzvd.JzvdStd;
 import cn.jzvd.demo.CustomMedia.JZMediaExo;
 import cn.jzvd.demo.CustomMedia.JZMediaIjk;
-import cn.jzvd.demo.CustomMedia.JZMediaSystemAssertFolder;
 
 /**
  * Created by Nathen on 2017/11/23.
@@ -47,7 +46,7 @@ public class ActivityApiCustomMedia extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        jzvdStd.setUp(jzDataSource, JzvdStd.SCREEN_NORMAL, JZMediaSystemAssertFolder.class);
+        jzvdStd.setUp(jzDataSource, JzvdStd.SCREEN_NORMAL,/* JZMediaSystemAssertFolder.class*/JZMediaSystem.class);
 
 
 //        jzvdStd.setUp("http://jzvd.nathen.cn/342a5f7ef6124a4a8faf00e738b8bee4/cf6d9db0bd4d41f59d09ea0a81e918fd-5287d2089db37e62345123a1be272f8b.mp4"

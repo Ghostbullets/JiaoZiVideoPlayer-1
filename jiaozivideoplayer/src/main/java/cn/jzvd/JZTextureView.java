@@ -51,15 +51,18 @@ public class JZTextureView extends TextureView {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         Log.i(TAG, "onMeasure " + " [" + this.hashCode() + "] ");
+        //当前旋转角度，视频宽、高
         int viewRotation = (int) getRotation();
         int videoWidth = currentVideoWidth;
         int videoHeight = currentVideoHeight;
 
-
+        //父控件宽高
         int parentHeight = ((View) getParent()).getMeasuredHeight();
         int parentWidth = ((View) getParent()).getMeasuredWidth();
         if (parentWidth != 0 && parentHeight != 0 && videoWidth != 0 && videoHeight != 0) {
+            //视频图像显示类型为----充满父容器
             if (Jzvd.VIDEO_IMAGE_DISPLAY_TYPE == Jzvd.VIDEO_IMAGE_DISPLAY_TYPE_FILL_PARENT) {
+                //交换宽高参数
                 if (viewRotation == 90 || viewRotation == 270) {
                     int tempSize = parentWidth;
                     parentWidth = parentHeight;
@@ -89,22 +92,24 @@ public class JZTextureView extends TextureView {
             Log.i(TAG, "widthMeasureSpec  [" + MeasureSpec.toString(widthMeasureSpec) + "]");
             Log.i(TAG, "heightMeasureSpec [" + MeasureSpec.toString(heightMeasureSpec) + "]");
 
+            //长宽都固定，根据长宽比调整大小
             if (widthSpecMode == MeasureSpec.EXACTLY && heightSpecMode == MeasureSpec.EXACTLY) {
                 // the size is fixed
                 width = widthSpecSize;
                 height = heightSpecSize;
                 // for compatibility, we adjust size based on aspect ratio
+                //把大于的长度调整大小
                 if (videoWidth * height < width * videoHeight) {
                     width = height * videoWidth / videoHeight;
                 } else if (videoWidth * height > width * videoHeight) {
                     height = width * videoHeight / videoWidth;
                 }
             } else if (widthSpecMode == MeasureSpec.EXACTLY) {
-                // only the width is fixed, adjust the height to match aspect ratio if possible
+                // only the width is fixed, adjust the height to match aspect ratio if possible 只有宽度是固定的，如果可能的话调整高度以匹配长宽比
                 width = widthSpecSize;
                 height = width * videoHeight / videoWidth;
                 if (heightSpecMode == MeasureSpec.AT_MOST && height > heightSpecSize) {
-                    // couldn't match aspect ratio within the constraints
+                    // couldn't match aspect ratio within the constraints 无法在约束条件下匹配纵横比
                     height = heightSpecSize;
                     width = height * videoWidth / videoHeight;
                 }
@@ -118,7 +123,7 @@ public class JZTextureView extends TextureView {
                     height = width * videoHeight / videoWidth;
                 }
             } else {
-                // neither the width nor the height are fixed, try to use actual video size
+                // neither the width nor the height are fixed, try to use actual video size 宽度和高度都不固定，尽量使用实际的视频大小
                 width = videoWidth;
                 height = videoHeight;
                 if (heightSpecMode == MeasureSpec.AT_MOST && height > heightSpecSize) {
@@ -133,7 +138,7 @@ public class JZTextureView extends TextureView {
                 }
             }
         } else {
-            // no size yet, just adopt the given spec sizes
+            // no size yet, just adopt the given spec sizes 没有尺寸，只是采用给定的规格尺寸
         }
         if (parentWidth != 0 && parentHeight != 0 && videoWidth != 0 && videoHeight != 0) {
             if (Jzvd.VIDEO_IMAGE_DISPLAY_TYPE == Jzvd.VIDEO_IMAGE_DISPLAY_TYPE_ORIGINAL) {

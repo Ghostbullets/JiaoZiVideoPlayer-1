@@ -85,5 +85,9 @@ public abstract class JZMediaInterface implements TextureView.SurfaceTextureList
      */
     public abstract void setSpeed(float speed);
 
+    /**
+     * 设置部分的接收器媒体载体
+     * @param surface 当传入null时，只会播放音频
+     */
     public abstract void setSurface(Surface surface);
 }

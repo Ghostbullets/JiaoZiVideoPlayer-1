@@ -383,6 +383,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
         resetProgressAndTime();
     }
 
+    //真正的prepared
     public void onPrepared() {
         Log.i(TAG, "onPrepared " + " [" + this.hashCode() + "] ");
         onStatePrepared();

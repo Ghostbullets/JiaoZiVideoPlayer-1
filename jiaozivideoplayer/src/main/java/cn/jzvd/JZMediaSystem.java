@@ -1,5 +1,6 @@
 package cn.jzvd;
 
+import android.content.res.AssetFileDescriptor;
 import android.graphics.SurfaceTexture;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -27,6 +28,7 @@ public class JZMediaSystem extends JZMediaInterface implements MediaPlayer.OnPre
 
     @Override
     public void prepare() {
+        //释放旧视频资源
         release();
         mMediaHandlerThread = new HandlerThread("JZVD");
         mMediaHandlerThread.start();
@@ -36,19 +38,32 @@ public class JZMediaSystem extends JZMediaInterface implements MediaPlayer.OnPre
         mMediaHandler.post(() -> {
             try {
                 mediaPlayer = new MediaPlayer();
+                //设置此媒体播放器的音频流类型
                 mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                //是否循环播放视频
                 mediaPlayer.setLooping(jzvd.jzDataSource.looping);
+                //设置屏幕常亮
+                mediaPlayer.setScreenOnWhilePlaying(true);
+                //设置准备、播放完毕、视频缓冲进度、跳转播放、播放错误、播放提示信息、警告、视频宽高变化等监听
                 mediaPlayer.setOnPreparedListener(JZMediaSystem.this);
                 mediaPlayer.setOnCompletionListener(JZMediaSystem.this);
                 mediaPlayer.setOnBufferingUpdateListener(JZMediaSystem.this);
-                mediaPlayer.setScreenOnWhilePlaying(true);
                 mediaPlayer.setOnSeekCompleteListener(JZMediaSystem.this);
                 mediaPlayer.setOnErrorListener(JZMediaSystem.this);
                 mediaPlayer.setOnInfoListener(JZMediaSystem.this);
                 mediaPlayer.setOnVideoSizeChangedListener(JZMediaSystem.this);
-                Class<MediaPlayer> clazz = MediaPlayer.class;
-                Method method = clazz.getDeclaredMethod("setDataSource", String.class, Map.class);
-                method.invoke(mediaPlayer, jzvd.jzDataSource.getCurrentUrl().toString(), jzvd.jzDataSource.headerMap);
+
+                Object currentKey = jzvd.jzDataSource.getCurrentKey();
+                if (currentKey instanceof AssetFileDescriptor) {
+                    AssetFileDescriptor assetFileDescriptor = (AssetFileDescriptor) currentKey;
+                    mediaPlayer.setDataSource(assetFileDescriptor.getFileDescriptor(), assetFileDescriptor.getStartOffset(), assetFileDescriptor.getLength());
+                } else {
+                    Class<MediaPlayer> clazz = MediaPlayer.class;
+                    Method method = clazz.getDeclaredMethod("setDataSource", String.class, Map.class);
+                    method.invoke(mediaPlayer, currentKey.toString(), jzvd.jzDataSource.headerMap);
+                }
+
+                //准备播放
                 mediaPlayer.prepareAsync();
                 mediaPlayer.setSurface(new Surface(SAVED_SURFACE));
             } catch (Exception e) {
@@ -133,7 +148,7 @@ public class JZMediaSystem extends JZMediaInterface implements MediaPlayer.OnPre
     }
 
     @Override
-    public void onPrepared(MediaPlayer mediaPlayer) {
+    public void onPrepared(MediaPlayer mediaPlayer) {//当媒体文件准备好播放时调用
         mediaPlayer.start();
         if (jzvd.jzDataSource.getCurrentUrl().toString().toLowerCase().contains("mp3") ||
                 jzvd.jzDataSource.getCurrentUrl().toString().toLowerCase().contains("wav")) {
@@ -142,30 +157,30 @@ public class JZMediaSystem extends JZMediaInterface implements MediaPlayer.OnPre
     }
 
     @Override
-    public void onCompletion(MediaPlayer mediaPlayer) {
+    public void onCompletion(MediaPlayer mediaPlayer) {//在播放期间到达媒体源的末尾
         handler.post(() -> jzvd.onAutoCompletion());
     }
 
     @Override
-    public void onBufferingUpdate(MediaPlayer mediaPlayer, final int percent) {
+    public void onBufferingUpdate(MediaPlayer mediaPlayer, final int percent) {//在缓冲接收到的媒体流时更新状态百分比
         handler.post(() -> jzvd.setBufferProgress(percent));
     }
 
     @Override
-    public void onSeekComplete(MediaPlayer mediaPlayer) {
+    public void onSeekComplete(MediaPlayer mediaPlayer) {//跳转播放操作已完成
         handler.post(() -> jzvd.onSeekComplete());
     }
 
     @Override
-    public boolean onError(MediaPlayer mediaPlayer, final int what, final int extra) {
+    public boolean onError(MediaPlayer mediaPlayer, final int what, final int extra) {//播放出错
         handler.post(() -> jzvd.onError(what, extra));
         return true;
     }
 
     @Override
-    public boolean onInfo(MediaPlayer mediaPlayer, final int what, final int extra) {
+    public boolean onInfo(MediaPlayer mediaPlayer, final int what, final int extra) {//播放中出现的提示信息或警告
         handler.post(() -> {
-            if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
+            if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {//玩家只需要推动第一个视频帧进行渲染。
                 if (jzvd.state == Jzvd.STATE_PREPARING
                         || jzvd.state == Jzvd.STATE_PREPARING_CHANGING_URL) {
                     jzvd.onPrepared();//真正的prepared
@@ -178,7 +193,7 @@ public class JZMediaSystem extends JZMediaInterface implements MediaPlayer.OnPre
     }
 
     @Override
-    public void onVideoSizeChanged(MediaPlayer mediaPlayer, int width, int height) {
+    public void onVideoSizeChanged(MediaPlayer mediaPlayer, int width, int height) {//视频宽高改变
         handler.post(() -> jzvd.onVideoSizeChanged(width, height));
     }
 
@@ -188,7 +203,7 @@ public class JZMediaSystem extends JZMediaInterface implements MediaPlayer.OnPre
     }
 
     @Override
-    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {//SurfaceTexture可使用时回调
         if (SAVED_SURFACE == null) {
             SAVED_SURFACE = surface;
             prepare();

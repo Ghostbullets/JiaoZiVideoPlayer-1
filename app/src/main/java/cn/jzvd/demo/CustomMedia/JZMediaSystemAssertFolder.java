@@ -16,7 +16,7 @@ import cn.jzvd.Jzvd;
 
 /**
  * Created by Nathen on 2017/11/8.
- * 实现系统的播放引擎
+ * 实现系统的播放引擎，用于播放assets文件夹下的视频
  */
 public class JZMediaSystemAssertFolder extends JZMediaInterface implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnBufferingUpdateListener, MediaPlayer.OnSeekCompleteListener, MediaPlayer.OnErrorListener, MediaPlayer.OnInfoListener, MediaPlayer.OnVideoSizeChangedListener {
 
