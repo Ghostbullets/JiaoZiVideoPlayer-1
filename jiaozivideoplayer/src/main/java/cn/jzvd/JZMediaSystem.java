@@ -53,14 +53,14 @@ public class JZMediaSystem extends JZMediaInterface implements MediaPlayer.OnPre
                 mediaPlayer.setOnInfoListener(JZMediaSystem.this);
                 mediaPlayer.setOnVideoSizeChangedListener(JZMediaSystem.this);
 
-                Object currentKey = jzvd.jzDataSource.getCurrentKey();
-                if (currentKey instanceof AssetFileDescriptor) {
-                    AssetFileDescriptor assetFileDescriptor = (AssetFileDescriptor) currentKey;
+                Object currentUrl = jzvd.jzDataSource.getCurrentUrl();
+                if (currentUrl instanceof AssetFileDescriptor) {
+                    AssetFileDescriptor assetFileDescriptor = (AssetFileDescriptor) currentUrl;
                     mediaPlayer.setDataSource(assetFileDescriptor.getFileDescriptor(), assetFileDescriptor.getStartOffset(), assetFileDescriptor.getLength());
                 } else {
                     Class<MediaPlayer> clazz = MediaPlayer.class;
                     Method method = clazz.getDeclaredMethod("setDataSource", String.class, Map.class);
-                    method.invoke(mediaPlayer, currentKey.toString(), jzvd.jzDataSource.headerMap);
+                    method.invoke(mediaPlayer, currentUrl.toString(), jzvd.jzDataSource.headerMap);
                 }
 
                 //准备播放
