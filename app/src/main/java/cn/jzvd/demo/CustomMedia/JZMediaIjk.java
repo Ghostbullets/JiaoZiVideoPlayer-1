@@ -16,6 +16,7 @@ import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkTimedText;
 
 /**
+ *
  * Created by Nathen on 2017/11/18.
  * IjkPlayer播放引擎
  */
@@ -25,6 +26,11 @@ public class JZMediaIjk extends JZMediaInterface implements IMediaPlayer.OnPrepa
 
     public JZMediaIjk(Jzvd jzvd) {
         super(jzvd);
+    }
+
+    @Override
+    public void start() {
+        if (ijkMediaPlayer != null) ijkMediaPlayer.start();
     }
 
     @Override
@@ -55,6 +61,7 @@ public class JZMediaIjk extends JZMediaInterface implements IMediaPlayer.OnPrepa
             ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_CODEC, "skip_loop_filter", 48);
             // 设置缓冲区,单位是kb
             ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "max-buffer-size", 1024 * 1024);
+            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "enable-accurate-seek", 1);
 
             ijkMediaPlayer.setOnPreparedListener(JZMediaIjk.this);
             ijkMediaPlayer.setOnVideoSizeChangedListener(JZMediaIjk.this);
@@ -84,11 +91,6 @@ public class JZMediaIjk extends JZMediaInterface implements IMediaPlayer.OnPrepa
     }
 
     @Override
-    public void start() {
-        ijkMediaPlayer.start();
-    }
-
-    @Override
     public void pause() {
         ijkMediaPlayer.pause();
     }
@@ -105,8 +107,18 @@ public class JZMediaIjk extends JZMediaInterface implements IMediaPlayer.OnPrepa
 
     @Override
     public void release() {
-        if (ijkMediaPlayer != null)
-            ijkMediaPlayer.release();
+        if (mMediaHandler != null && mMediaHandlerThread != null && ijkMediaPlayer != null) {//不知道有没有妖孽
+            HandlerThread tmpHandlerThread = mMediaHandlerThread;
+            IjkMediaPlayer tmpMediaPlayer = ijkMediaPlayer;
+            JZMediaInterface.SAVED_SURFACE = null;
+
+            mMediaHandler.post(() -> {
+                tmpMediaPlayer.setSurface(null);
+                tmpMediaPlayer.release();
+                tmpHandlerThread.quit();
+            });
+            ijkMediaPlayer = null;
+        }
     }
 
     @Override
@@ -131,11 +143,7 @@ public class JZMediaIjk extends JZMediaInterface implements IMediaPlayer.OnPrepa
 
     @Override
     public void onPrepared(IMediaPlayer iMediaPlayer) {
-        ijkMediaPlayer.start();
-        if (jzvd.jzDataSource.getCurrentUrl().toString().toLowerCase().contains("mp3") ||
-                jzvd.jzDataSource.getCurrentUrl().toString().toLowerCase().contains("wav")) {
-            handler.post(() -> jzvd.onPrepared());
-        }
+        handler.post(() -> jzvd.onPrepared());
     }
 
     @Override
@@ -151,13 +159,7 @@ public class JZMediaIjk extends JZMediaInterface implements IMediaPlayer.OnPrepa
 
     @Override
     public boolean onInfo(IMediaPlayer iMediaPlayer, final int what, final int extra) {
-        handler.post(() -> {
-            if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
-                jzvd.onPrepared();
-            } else {
-                jzvd.onInfo(what, extra);
-            }
-        });
+        handler.post(() -> jzvd.onInfo(what, extra));
         return false;
     }
 
