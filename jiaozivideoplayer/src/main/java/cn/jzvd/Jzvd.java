@@ -399,7 +399,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
         }
     }
 
-    public boolean preloading = false;
+    public boolean preloading = false;//是否设置了预加载视频
 
     public void startPreloading() {
         preloading = true;
