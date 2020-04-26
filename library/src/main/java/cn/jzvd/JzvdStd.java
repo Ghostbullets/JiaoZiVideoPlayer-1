@@ -168,7 +168,7 @@ public class JzvdStd extends Jzvd {
     /**
      * 更改启动按钮大小，在全屏、普通状态切换时
      *
-     * @param size
+     * @param size 启动按钮大小
      */
     public void changeStartButtonSize(int size) {
         ViewGroup.LayoutParams lp = startButton.getLayoutParams();
@@ -776,12 +776,13 @@ public class JzvdStd extends Jzvd {
 
     /**
      * 设置全部的控制按钮的显示隐藏
-     * @param topCon 顶部容器
-     * @param bottomCon 底部容器
-     * @param startBtn 开始、暂停按钮
-     * @param loadingPro 加载中弹窗
-     * @param thumbImg 缩略图
-     * @param bottomPro  底部弹窗
+     *
+     * @param topCon      顶部容器
+     * @param bottomCon   底部容器
+     * @param startBtn    开始、暂停按钮
+     * @param loadingPro  加载中弹窗
+     * @param posterImg   缩略图
+     * @param bottomPro   底部弹窗
      * @param retryLayout 重新尝试播放布局
      */
     public void setAllControlsVisiblity(int topCon, int bottomCon, int startBtn, int loadingPro,
@@ -917,9 +918,8 @@ public class JzvdStd extends Jzvd {
     }
 
     /**
-     * 根据布局创建弹窗
      * @param localView 布局
-     * @return
+     * @return 根据布局创建弹窗
      */
     public Dialog createDialogWithView(View localView) {
         Dialog dialog = new Dialog(getContext(), R.style.jz_style_dialog_progress);

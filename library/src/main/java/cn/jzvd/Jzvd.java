@@ -251,7 +251,8 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     public abstract int getLayoutId();
 
     /**
-     *  初始化信息、控件
+     * 初始化信息、控件
+     *
      * @param context 上下文
      */
     public void init(Context context) {
@@ -296,8 +297,9 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
 
     /**
      * 设置资源信息
-     * @param jzDataSource  数据来源
-     * @param screen 窗口状态
+     *
+     * @param jzDataSource        数据来源
+     * @param screen              窗口状态
      * @param mediaInterfaceClass 播放引擎
      */
     public void setUp(JZDataSource jzDataSource, int screen, Class mediaInterfaceClass) {
@@ -310,8 +312,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     }
 
     /**
-     * 设置播放引擎
-     * @param mediaInterfaceClass
+     * @param mediaInterfaceClass 设置播放引擎
      */
     public void setMediaInterface(Class mediaInterfaceClass) {
         reset();
@@ -377,10 +378,10 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
         if (id == R.id.surface_container) {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    touchActionDown(x,y);
+                    touchActionDown(x, y);
                     break;
                 case MotionEvent.ACTION_MOVE:
-                    touchActionMove(x,y);
+                    touchActionMove(x, y);
                     break;
                 case MotionEvent.ACTION_UP:
                     touchActionUp();
@@ -409,7 +410,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
         startProgressTimer();
     }
 
-    private void touchActionMove(float x,float y) {
+    private void touchActionMove(float x, float y) {
         Log.i(TAG, "onTouch surfaceContainer actionMove [" + this.hashCode() + "] ");
         float deltaX = x - mDownX;
         float deltaY = y - mDownY;
@@ -507,7 +508,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
         }
     }
 
-    private void touchActionDown(float x,float y) {
+    private void touchActionDown(float x, float y) {
         Log.i(TAG, "onTouch surfaceContainer actionDown [" + this.hashCode() + "] ");
         mTouchingProgressBar = true;
 
@@ -554,7 +555,8 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
 
     /**
      * 更改视频据来源
-     * @param jzDataSource 要切换的数据来源
+     *
+     * @param jzDataSource    要切换的数据来源
      * @param seekToInAdvance 切换的同时要同步视频进度
      */
     public void changeUrl(JZDataSource jzDataSource, long seekToInAdvance) {
@@ -648,8 +650,9 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
 
     /**
      * 提示信息或警告
-     * @param what
-     * @param extra
+     *
+     * @param what  标识
+     * @param extra 额外
      */
     public void onInfo(int what, int extra) {
         Log.d(TAG, "onInfo what - " + what + " extra - " + extra);
@@ -674,8 +677,9 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
 
     /**
      * 视频异步操作期间发生错误
-     * @param what
-     * @param extra
+     *
+     * @param what  标识
+     * @param extra 额外
      */
     public void onError(int what, int extra) {
         Log.e(TAG, "onError " + what + " - " + extra + " [" + this.hashCode() + "] ");
@@ -887,8 +891,9 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
 
     /**
      * 视频宽高变化，即横竖、上下屏幕切换
-     * @param width
-     * @param height
+     *
+     * @param width  宽
+     * @param height 高
      */
     public void onVideoSizeChanged(int width, int height) {
         Log.i(TAG, "onVideoSizeChanged " + " [" + this.hashCode() + "] ");
@@ -901,7 +906,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     }
 
     /**
-     *计时器开始运行，手势滑动抬起；播放状态切换为播放中、暂停；滑动seekBar结束后；调用
+     * 计时器开始运行，手势滑动抬起；播放状态切换为播放中、暂停；滑动seekBar结束后；调用
      */
     public void startProgressTimer() {
         Log.i(TAG, "startProgressTimer: " + " [" + this.hashCode() + "] ");
@@ -925,6 +930,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
 
     /**
      * 根据视频进度以及总时长等，设置seekBar的进度，设置时间文本描述
+     *
      * @param progress seek的进度，比如0-100
      * @param position 视频进度，指的是具体的多少毫秒
      * @param duration 视频总长度，指的是具体的多少毫秒
@@ -948,7 +954,8 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
 
     /**
      * 用于网络url资源的视频播放时，设置缓冲区的进度条
-     * @param bufferProgress
+     *
+     * @param bufferProgress 缓冲区的进度条
      */
     public void setBufferProgress(int bufferProgress) {
         if (bufferProgress != 0) progressBar.setSecondaryProgress(bufferProgress);
@@ -965,8 +972,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     }
 
     /**
-     * 播放中、暂停状态下获取当前视频进度
-     * @return
+     * @return 播放中、暂停状态下获取当前视频进度
      */
     public long getCurrentPositionWhenPlaying() {
         long position = 0;
@@ -982,8 +988,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     }
 
     /**
-     * 获取当前视频总长度
-     * @return
+     * @return 获取当前视频总长度
      */
     public long getDuration() {
         long duration = 0;
@@ -1035,6 +1040,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
 
     /**
      * 克隆当前Jzvd类并添加到容器中
+     *
      * @param vg 容器
      */
     public void cloneAJzvd(ViewGroup vg) {
@@ -1153,10 +1159,11 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
 
     /**
      * 手势滑动改变视频进度时回调弹窗
-     * @param deltaX X轴偏移量
-     * @param seekTime 当前视频进度对应时间字符串描述
-     * @param seekTimePosition 当前视频进度对应时间 毫秒为单位
-     * @param totalTime 当前视频总长度对应时间字符串描述
+     *
+     * @param deltaX            X轴偏移量
+     * @param seekTime          当前视频进度对应时间字符串描述
+     * @param seekTimePosition  当前视频进度对应时间 毫秒为单位
+     * @param totalTime         当前视频总长度对应时间字符串描述
      * @param totalTimeDuration 当前视频总长度对应时间 毫秒为单位
      */
     public void showProgressDialog(float deltaX,
@@ -1173,7 +1180,8 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
 
     /**
      * 显示修改音量弹窗
-     * @param deltaY Y轴偏移量
+     *
+     * @param deltaY        Y轴偏移量
      * @param volumePercent 音量百分比
      */
     public void showVolumeDialog(float deltaY, int volumePercent) {
@@ -1189,7 +1197,8 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
 
     /**
      * 显示修改屏幕亮度弹窗
-     * @param brightnessPercent
+     *
+     * @param brightnessPercent 屏幕亮度百分比
      */
     public void showBrightnessDialog(int brightnessPercent) {
 
@@ -1214,6 +1223,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     }
 
     public static class JZAutoFullscreenListener implements SensorEventListener {//传感器事件通知监听
+
         @Override
         public void onSensorChanged(SensorEvent event) {//可以得到传感器实时测量出来的变化值
             final float x = event.values[SensorManager.DATA_X];

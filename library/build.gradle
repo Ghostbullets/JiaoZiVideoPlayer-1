@@ -25,4 +25,4 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 }
 
-apply from: '../gradle/build_upload.gradle'
+apply from: 'publish-bitbucket.gradle'

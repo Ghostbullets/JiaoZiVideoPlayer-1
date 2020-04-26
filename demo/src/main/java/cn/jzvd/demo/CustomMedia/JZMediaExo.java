@@ -56,6 +56,11 @@ public class JZMediaExo extends JZMediaInterface implements Player.EventListener
     }
 
     @Override
+    public void start() {
+        simpleExoPlayer.setPlayWhenReady(true);
+    }
+
+    @Override
     public void prepare() {
         Log.e(TAG, "prepare");
         Context context = jzvd.getContext();

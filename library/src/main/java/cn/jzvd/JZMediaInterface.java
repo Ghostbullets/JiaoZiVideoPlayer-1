@@ -39,15 +39,14 @@ public abstract class JZMediaInterface implements TextureView.SurfaceTextureList
     public abstract void pause();
 
     /**
-     * 是否在播放
+     * @return 是否在播放
      */
-
     public abstract boolean isPlaying();
 
     /**
      * 跳转播放
      *
-     * @param time
+     * @param time 跳转时间
      */
     public abstract void seekTo(long time);
 
@@ -57,16 +56,12 @@ public abstract class JZMediaInterface implements TextureView.SurfaceTextureList
     public abstract void release();
 
     /**
-     * 得到当前播放进度
-     *
-     * @return
+     * @return 得到当前播放进度
      */
     public abstract long getCurrentPosition();
 
     /**
-     * 获取视频长度
-     *
-     * @return
+     * @return 获取视频长度
      */
     public abstract long getDuration();
 
@@ -79,14 +74,13 @@ public abstract class JZMediaInterface implements TextureView.SurfaceTextureList
     public abstract void setVolume(float leftVolume, float rightVolume);
 
     /**
-     * 设置播放速度，比如0.5倍数，1.5倍数
-     *
-     * @param speed
+     * @param speed 设置播放速度，比如0.5倍数，1.5倍数
      */
     public abstract void setSpeed(float speed);
 
     /**
      * 设置部分的接收器媒体载体
+     *
      * @param surface 当传入null时，只会播放音频
      */
     public abstract void setSurface(Surface surface);

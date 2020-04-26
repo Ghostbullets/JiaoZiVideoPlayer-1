@@ -27,9 +27,8 @@ public class JZUtils {
     public static int SYSTEM_UI = 0;
 
     /**
-     * 将时间戳转换为时间字符串
      * @param timeMs 毫秒为单位的时间
-     * @return
+     * @return 将时间戳转换为时间字符串
      */
     public static String stringForTime(long timeMs) {
         if (timeMs <= 0 || timeMs >= 24 * 60 * 60 * 1000) {
@@ -103,8 +102,9 @@ public class JZUtils {
 
     /**
      * 保存播放进度
-     * @param context 上下文
-     * @param url 视频url
+     *
+     * @param context  上下文
+     * @param url      视频url
      * @param progress 进度
      */
     public static void saveProgress(Context context, Object url, long progress) {
@@ -120,10 +120,9 @@ public class JZUtils {
     }
 
     /**
-     * 根据视频url获取播放进度
      * @param context 上下文
-     * @param url 视频url
-     * @return
+     * @param url     视频url
+     * @return 根据视频url获取播放进度
      */
     public static long getSavedProgress(Context context, Object url) {
         if (!Jzvd.SAVE_PROGRESS) return 0;
@@ -152,7 +151,8 @@ public class JZUtils {
 
     /**
      * 取消全屏
-     * @param context
+     *
+     * @param context 上下文
      */
     @SuppressLint("RestrictedApi")
     public static void showStatusBar(Context context) {
@@ -163,7 +163,8 @@ public class JZUtils {
 
     /**
      * 全屏 如果是沉浸式的，全屏前就没有状态栏
-     * @param context
+     *
+     * @param context 上下文
      */
     @SuppressLint("RestrictedApi")
     public static void hideStatusBar(Context context) {
@@ -174,7 +175,8 @@ public class JZUtils {
 
     /**
      * 隐藏导航栏、设置全屏模式
-     * @param context
+     *
+     * @param context 上下文
      */
     @SuppressLint("NewApi")
     public static void hideSystemUI(Context context) {
@@ -193,7 +195,8 @@ public class JZUtils {
 
     /**
      * 显示系统UI
-     * @param context
+     *
+     * @param context 上下文
      */
     @SuppressLint("NewApi")
     public static void showSystemUI(Context context) {
