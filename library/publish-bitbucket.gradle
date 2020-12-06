@@ -103,9 +103,9 @@ def urlExists(String repositoryUrl) {
 }
 
 def getBase64EncodedCredentials() {
-    if (rootProject.file("private.properties").exists()) {
+    if (rootProject.file("local.properties").exists()) {
         Properties properties = new Properties()
-        properties.load(rootProject.file("private.properties").newDataInputStream())
+        properties.load(rootProject.file("local.properties").newDataInputStream())
         def s = properties.getProperty("USERNAME") + ":" + properties.getProperty("PASSWORD")
         return s.bytes.encodeBase64().toString()
     }
