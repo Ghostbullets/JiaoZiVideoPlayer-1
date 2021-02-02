@@ -135,7 +135,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     protected int mGestureDownVolume;//记录按下时音量大小
     protected float mGestureDownBrightness;//记录按下时屏幕亮度大小
     protected long mSeekTimePosition;//记录实时拖动视频进度
-    private Context jzvdContext;//使用该控件的Activity对象
+    protected Context jzvdContext;//使用该控件的Activity对象
     protected long mCurrentPosition;
     /**
      * 如果不在列表中可以不加block
