@@ -19,6 +19,8 @@ import android.view.ViewParent;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -51,6 +53,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     public static final int STATE_PAUSE = 6;//暂停
     public static final int STATE_AUTO_COMPLETE = 7;//播放完毕
     public static final int STATE_ERROR = 8;//播放出错
+    //视频图像显示类型
     public static final int VIDEO_IMAGE_DISPLAY_TYPE_ADAPTER = 0;//DEFAULT
     public static final int VIDEO_IMAGE_DISPLAY_TYPE_FILL_PARENT = 1;//视频图像显示类型--充满父容器
     public static final int VIDEO_IMAGE_DISPLAY_TYPE_FILL_SCROP = 2;//视频图像显示类型--填充剪切,例如图宽高300,100,父容器200,200,则填充到600,200,然后多余的剪切
@@ -61,12 +64,13 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     public static boolean TOOL_BAR_EXIST = true;//工具栏存在 ?   即进度条时间等控件
     public static int FULLSCREEN_ORIENTATION = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;//全屏窗口下方向----原:由物理感应器决定显示方向 现:只能是横向
     public static int NORMAL_ORIENTATION = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;//普通窗口下方向---竖屏
-    public static boolean SAVE_PROGRESS = false;//保存视频进度，下次进来选择是否跳转到对应位置播放
+    public static boolean SAVE_PROGRESS = true;//保存视频进度，下次进来选择是否跳转到对应位置播放
     public static boolean WIFI_TIP_DIALOG_SHOWED = false;//当使用数据播放时，是否在播放前弹窗提示，默认false弹出提示
     public static int VIDEO_IMAGE_DISPLAY_TYPE = 0;//视频图像显示类型，默认0普通窗口
     public static long lastAutoFullscreenTime = 0;//最后一次自动全屏时间
     public static int ON_PLAY_PAUSE_TMP_STATE = 0;//这个考虑不放到库里，去自定义
     public static int backUpBufferState = -1;
+    public static float PROGRESS_DRAG_RATE = 1f;//进度条滑动阻尼系数 越大播放进度条滑动越慢
     public static AudioManager.OnAudioFocusChangeListener onAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {//是否新建个class，代码更规矩，并且变量的位置也很尴尬
         @Override
         public void onAudioFocusChange(int focusChange) {
@@ -132,6 +136,14 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     protected float mGestureDownBrightness;//记录按下时屏幕亮度大小
     protected long mSeekTimePosition;//记录实时拖动视频进度
     private Context jzvdContext;//使用该控件的Activity对象
+    protected long mCurrentPosition;
+    /**
+     * 如果不在列表中可以不加block
+     */
+    protected ViewGroup.LayoutParams blockLayoutParams;
+    protected int blockIndex;
+    protected int blockWidth;
+    protected int blockHeight;
 
     public Jzvd(Context context) {
         super(context);
@@ -160,6 +172,10 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
             } else if (CURRENT_JZVD.state == Jzvd.STATE_PREPARING) {
                 //准备状态暂停后的
                 CURRENT_JZVD.startVideo();
+            }
+            if (CURRENT_JZVD.screen == Jzvd.SCREEN_FULLSCREEN) {
+                JZUtils.hideStatusBar(CURRENT_JZVD.jzvdContext);
+                JZUtils.hideSystemUI(CURRENT_JZVD.jzvdContext);
             }
         }
     }
@@ -221,7 +237,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     public static boolean backPress() {
         Log.i(TAG, "backPress");
         if (CONTAINER_LIST.size() != 0 && CURRENT_JZVD != null) {//判断条件，因为当前所有goBack都是回到普通窗口
-            CURRENT_JZVD.gotoScreenNormal();
+            CURRENT_JZVD.gotoNormalScreen();
             return true;
         } else if (CONTAINER_LIST.size() == 0 && CURRENT_JZVD != null && CURRENT_JZVD.screen != SCREEN_NORMAL) {//退出直接进入的全屏
             CURRENT_JZVD.clearFloatScreen();
@@ -257,6 +273,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
      */
     public void init(Context context) {
         View.inflate(context, getLayoutId(), this);
+        jzvdContext = context;
         startButton = findViewById(R.id.start);
         fullscreenButton = findViewById(R.id.fullscreen);
         progressBar = findViewById(R.id.bottom_seek_progress);
@@ -265,6 +282,31 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
         bottomContainer = findViewById(R.id.layout_bottom);
         textureViewContainer = findViewById(R.id.surface_container);
         topContainer = findViewById(R.id.layout_top);
+
+        if (startButton == null) {
+            startButton = new ImageView(context);
+        }
+        if (fullscreenButton == null) {
+            fullscreenButton = new ImageView(context);
+        }
+        if (progressBar == null) {
+            progressBar = new SeekBar(context);
+        }
+        if (currentTimeTextView == null) {
+            currentTimeTextView = new TextView(context);
+        }
+        if (totalTimeTextView == null) {
+            totalTimeTextView = new TextView(context);
+        }
+        if (bottomContainer == null) {
+            bottomContainer = new LinearLayout(context);
+        }
+        if (textureViewContainer == null) {
+            textureViewContainer = new FrameLayout(context);
+        }
+        if (topContainer == null) {
+            topContainer = new RelativeLayout(context);
+        }
 
         startButton.setOnClickListener(this);
         fullscreenButton.setOnClickListener(this);
@@ -330,7 +372,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     }
 
     //全屏、退出全屏
-    private void clickFullscreen() {
+    protected void clickFullscreen() {
         Log.i(TAG, "onClick fullscreen [" + this.hashCode() + "] ");
         if (state == STATE_AUTO_COMPLETE) return;
         if (screen == SCREEN_FULLSCREEN) {
@@ -338,12 +380,12 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
             backPress();
         } else {
             Log.d(TAG, "toFullscreenActivity [" + this.hashCode() + "] ");
-            gotoScreenFullscreen();
+            gotoFullscreen();
         }
     }
 
     //播放、暂停
-    private void clickStart() {
+    protected void clickStart() {
         Log.i(TAG, "onClick start [" + this.hashCode() + "] ");
         if (jzDataSource == null || jzDataSource.urlsMap.isEmpty() || jzDataSource.getCurrentUrl() == null) {
             Toast.makeText(getContext(), getResources().getString(R.string.no_url), Toast.LENGTH_SHORT).show();
@@ -391,7 +433,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
         return false;
     }
 
-    private void touchActionUp() {
+    protected void touchActionUp() {
         Log.i(TAG, "onTouch surfaceContainer actionUp [" + this.hashCode() + "] ");
         mTouchingProgressBar = false;
         dismissProgressDialog();
@@ -410,7 +452,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
         startProgressTimer();
     }
 
-    private void touchActionMove(float x, float y) {
+    protected void touchActionMove(float x, float y) {
         Log.i(TAG, "onTouch surfaceContainer actionMove [" + this.hashCode() + "] ");
         float deltaX = x - mDownX;
         float deltaY = y - mDownY;
@@ -434,7 +476,8 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
                         }
                     } else {
                         //如果y轴滑动距离超过设置的处理范围，那么进行滑动事件处理
-                        if (mDownX < mScreenWidth * 0.5f) {//左侧改变亮度
+                        //if (mDownX < mScreenWidth * 0.5f) {//左侧改变亮度
+                        if (mDownX < mScreenHeight * 0.5f) {//左侧改变亮度
                             mChangeBrightness = true;
                             WindowManager.LayoutParams lp = JZUtils.getWindow(getContext()).getAttributes();
                             if (lp.screenBrightness < 0) {
@@ -459,8 +502,12 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
         //如果拖拽视频进度
         if (mChangePosition) {
             long totalTimeDuration = getDuration();
+            if (PROGRESS_DRAG_RATE <= 0) {
+                Log.d(TAG, "error PROGRESS_DRAG_RATE value");
+                PROGRESS_DRAG_RATE = 1f;
+            }
             //计算拖拽的目标进度(当拖拽整个屏幕宽度的长度时，目标进度=视频长度)
-            mSeekTimePosition = (int) (mGestureDownPosition + deltaX * totalTimeDuration / mScreenWidth);
+            mSeekTimePosition = (int) (mGestureDownPosition + deltaX * totalTimeDuration / (mScreenWidth * PROGRESS_DRAG_RATE));
             if (mSeekTimePosition > totalTimeDuration)
                 mSeekTimePosition = totalTimeDuration;
             //目标进度时间字符串
@@ -508,7 +555,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
         }
     }
 
-    private void touchActionDown(float x, float y) {
+    protected void touchActionDown(float x, float y) {
         Log.i(TAG, "onTouch surfaceContainer actionDown [" + this.hashCode() + "] ");
         mTouchingProgressBar = true;
 
@@ -659,7 +706,8 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
         if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
             Log.d(TAG, "MEDIA_INFO_VIDEO_RENDERING_START");
             if (state == Jzvd.STATE_PREPARED
-                    || state == Jzvd.STATE_PREPARING_CHANGE_URL) {
+                    || state == Jzvd.STATE_PREPARING_CHANGE_URL
+                    || state == Jzvd.STATE_PREPARING_PLAYING) {
                 onStatePlaying();//开始渲染图像，真正进入playing状态
             }
         } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START) {
@@ -722,9 +770,8 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
         ViewGroup vg = (ViewGroup) (JZUtils.scanForActivity(jzvdContext)).getWindow().getDecorView();
         vg.removeView(this);
         textureViewContainer.removeView(textureView);
-        CONTAINER_LIST.getLast().removeAllViews();
-        CONTAINER_LIST.getLast().addView(this, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        CONTAINER_LIST.getLast().removeViewAt(blockIndex);//remove block
+        CONTAINER_LIST.getLast().addView(this, blockIndex, blockLayoutParams);
         CONTAINER_LIST.pop();
 
         setScreenNormal();
@@ -937,6 +984,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
      */
     public void onProgress(int progress, long position, long duration) {
 //        Log.d(TAG, "onProgress: progress=" + progress + " position=" + position + " duration=" + duration);
+        mCurrentPosition = position;
         if (!mTouchingProgressBar) {
             if (seekToManulPosition != -1) {
                 if (seekToManulPosition > progress) {
@@ -965,6 +1013,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
      * 重置进度条、时间描述
      */
     public void resetProgressAndTime() {
+        mCurrentPosition = 0;
         progressBar.setProgress(0);
         progressBar.setSecondaryProgress(0);
         currentTimeTextView.setText(JZUtils.stringForTime(0));
@@ -1048,7 +1097,9 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
             Constructor<Jzvd> constructor = (Constructor<Jzvd>) Jzvd.this.getClass().getConstructor(Context.class);
             Jzvd jzvd = constructor.newInstance(getContext());
             jzvd.setId(getId());
-            vg.addView(jzvd);
+            jzvd.setMinimumWidth(blockWidth);
+            jzvd.setMinimumHeight(blockHeight);
+            vg.addView(jzvd, blockIndex, blockLayoutParams);
             jzvd.setUp(jzDataSource.cloneMe(), SCREEN_NORMAL, mediaInterfaceClass);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
@@ -1063,18 +1114,25 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
 
     /**
      * 切换到全屏窗口状态
+     * 如果全屏或者返回全屏的视图有问题，复写这两个函数gotoScreenNormal(),根据自己布局的情况重新布局。
      */
-    public void gotoScreenFullscreen() {
+    public void gotoFullscreen() {
         gotoFullscreenTime = System.currentTimeMillis();
-        jzvdContext = ((ViewGroup) getParent()).getContext();
         ViewGroup vg = (ViewGroup) getParent();
+        jzvdContext = vg.getContext();
+        blockLayoutParams = getLayoutParams();
+        blockIndex = vg.indexOfChild(this);
+        blockWidth = getWidth();
+        blockHeight = getHeight();
+
         vg.removeView(this);
         cloneAJzvd(vg);
         CONTAINER_LIST.add(vg);
         vg = (ViewGroup) (JZUtils.scanForActivity(jzvdContext)).getWindow().getDecorView();
 
-        vg.addView(this, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        ViewGroup.LayoutParams fullLayout = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        vg.addView(this, fullLayout);
 
         setScreenFullscreen();
         JZUtils.hideStatusBar(jzvdContext);
@@ -1086,13 +1144,13 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     /**
      * 切换到普通窗口状态
      */
-    public void gotoScreenNormal() {//goback本质上是goto
+    public void gotoNormalScreen() {//goback本质上是goto
         gobakFullscreenTime = System.currentTimeMillis();//退出全屏
         ViewGroup vg = (ViewGroup) (JZUtils.scanForActivity(jzvdContext)).getWindow().getDecorView();
         vg.removeView(this);
-        CONTAINER_LIST.getLast().removeAllViews();
-        CONTAINER_LIST.getLast().addView(this, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+//        CONTAINER_LIST.getLast().removeAllViews();
+        CONTAINER_LIST.getLast().removeViewAt(blockIndex);//remove block
+        CONTAINER_LIST.getLast().addView(this, blockIndex, blockLayoutParams);
         CONTAINER_LIST.pop();
 
         setScreenNormal();//这块可以放到jzvd中
@@ -1127,7 +1185,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
             } else {
                 JZUtils.setRequestedOrientation(getContext(), ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
             }
-            gotoScreenFullscreen();
+            gotoFullscreen();
         }
     }
 
@@ -1223,7 +1281,6 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     }
 
     public static class JZAutoFullscreenListener implements SensorEventListener {//传感器事件通知监听
-
         @Override
         public void onSensorChanged(SensorEvent event) {//可以得到传感器实时测量出来的变化值
             final float x = event.values[SensorManager.DATA_X];

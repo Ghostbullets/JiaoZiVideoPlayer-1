@@ -1,12 +1,14 @@
+/infer-out
+gradle.properties
 #Android Studio / Intellij IDEA 为每一个module 生成的配置文件
 *.iml
 #gradle 运行以后生成的缓存文件夹。这样子可以忽略最外面、所有module的build文件夹
 .gradle
 #配置个人电脑环境中的配置，这不能提供给别人使用。  第一个是所有module里面忽略，第二个是最外面的忽略
 /local.properties
-local.properties
 #android studio / Intellij IDEA 工程打开以后生成的工作环境配置文件夹。
-*.idea
+.idea
+.DS_Store
 #编译时的缓存文件夹，这样子可以忽略最外面、所有module的build文件夹
 build
 #gradle 任务的脚本命令。 这样子可以忽略最外面、所有module的build文件夹(已经提交版本控制，没法忽略)
@@ -20,4 +22,7 @@ gradlew.bat
 *.asc
 projectFilesBackup
 release
-/infer-out
+_build
+/gradle/
+
+*.so

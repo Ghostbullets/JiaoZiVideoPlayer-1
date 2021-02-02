@@ -40,12 +40,11 @@ public class JZMediaSystem extends JZMediaInterface implements MediaPlayer.OnPre
                 mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                 //是否循环播放视频
                 mediaPlayer.setLooping(jzvd.jzDataSource.looping);
-                //设置屏幕常亮
-                mediaPlayer.setScreenOnWhilePlaying(true);
                 //设置准备、播放完毕、视频缓冲进度、跳转播放、播放错误、播放提示信息、警告、视频宽高变化等监听
                 mediaPlayer.setOnPreparedListener(JZMediaSystem.this);
                 mediaPlayer.setOnCompletionListener(JZMediaSystem.this);
                 mediaPlayer.setOnBufferingUpdateListener(JZMediaSystem.this);
+                //设置屏幕常亮
                 mediaPlayer.setScreenOnWhilePlaying(true);
                 mediaPlayer.setOnSeekCompleteListener(JZMediaSystem.this);
                 mediaPlayer.setOnErrorListener(JZMediaSystem.this);
@@ -57,11 +56,11 @@ public class JZMediaSystem extends JZMediaInterface implements MediaPlayer.OnPre
                     AssetFileDescriptor assetFileDescriptor = (AssetFileDescriptor) currentUrl;
                     mediaPlayer.setDataSource(assetFileDescriptor.getFileDescriptor(), assetFileDescriptor.getStartOffset(), assetFileDescriptor.getLength());
                 } else {
+                    //如果不用反射，没有url和header参数的setDataSource函数
                     Class<MediaPlayer> clazz = MediaPlayer.class;
                     Method method = clazz.getDeclaredMethod("setDataSource", String.class, Map.class);
                     method.invoke(mediaPlayer, currentUrl.toString(), jzvd.jzDataSource.headerMap);
                 }
-
                 //准备播放
                 mediaPlayer.prepareAsync();
                 mediaPlayer.setSurface(new Surface(SAVED_SURFACE));
